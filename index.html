@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#2c3e50">
+  <link rel="icon" href="icon.png">
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Beranda - WarungQ</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .notifikasi {
+      background-color: #f1c40f;
+      color: #333;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+    .notifikasi.buruk {
+      background-color: #e74c3c;
+      color: #fff;
+    }
+    .notifikasi.baik {
+      background-color: #2ecc71;
+      color: #fff;
+    }
+    .logout-btn {
+      float: right;
+      background-color: #e74c3c;
+      padding: 8px 14px;
+      border-radius: 6px;
+      color: white;
+      font-size: 0.9rem;
+      margin-top: -90px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .logout-btn:hover {
+      background-color: #c0392b;
+    }
+  </style>
+  <script>
+    // Cek apakah user sudah login
+    if (!localStorage.getItem("loggedIn") || localStorage.getItem("loggedIn") !== "true") {
+      window.location.href = "login.html";
+    }
+  </script>
+</head>
+
+<body>
+  <header>
+    WarungQ
+    <p>Manajemen Warung Digital Sederhana</p>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+  </header>
+
+  <main>
+    <div class="card">
+      <div id="notifikasi"></div>
+      <h2>Ringkasan Keuangan</h2>
+      <ul style="list-style: none; padding-left: 0;">
+        <li><strong>Pemasukan:</strong> <span id="pemasukan">Rp0</span></li>
+        <li><strong>Pengeluaran:</strong> <span id="pengeluaran">Rp0</span></li>
+        <li><strong>Keuntungan:</strong> <span id="keuntungan">Rp0</span></li>
+      </ul>
+    </div>
+  </main>
+
+  <nav class="nav">
+    <a href="index.html" class="active">🏠 Beranda</a>
+    <a href="transaksi.html">➕ Tambah Transaksi</a>
+    <a href="riwayat.html">📜 Riwayat Transaksi</a>
+    <a href="laporan.html">📊 Laporan</a>
+  </nav>
+
+  <script>
+    const username = localStorage.getItem("usernameAktif");
+    const data = JSON.parse(localStorage.getItem(`transaksi_${username}`)) || [];
+
+    let pemasukan = 0;
+    let pengeluaran = 0;
+
+    data.forEach(t => {
+      if (t.total > 0) {
+        pemasukan += t.total;
+      } else {
+        pengeluaran += Math.abs(t.total);
+      }
+    });
+
+    const keuntungan = pemasukan - pengeluaran;
+
+    // Tampilkan ringkasan
+    document.getElementById("pemasukan").textContent = "Rp" + pemasukan.toLocaleString("id-ID");
+    document.getElementById("pengeluaran").textContent = "Rp" + pengeluaran.toLocaleString("id-ID");
+    document.getElementById("keuntungan").textContent = "Rp" + keuntungan.toLocaleString("id-ID");
+
+    // Tampilkan notifikasi keuangan
+    const notifikasiDiv = document.getElementById("notifikasi");
+
+    if (pemasukan === 0 && pengeluaran === 0) {
+      notifikasiDiv.textContent = "Belum ada transaksi keuangan.";
+      notifikasiDiv.classList.add("notifikasi");
+    } else if (pengeluaran > pemasukan) {
+      notifikasiDiv.textContent = "⚠️ Pengeluaran melebihi pemasukan. Periksa kembali keuangan Anda.";
+      notifikasiDiv.classList.add("notifikasi", "buruk");
+    } else if (keuntungan <= 10000) {
+      notifikasiDiv.textContent = "⚠️ Keuntungan sangat minim. Coba tingkatkan penjualan!";
+      notifikasiDiv.classList.add("notifikasi");
+    } else {
+      notifikasiDiv.textContent = "✅ Keuangan dalam kondisi baik!";
+      notifikasiDiv.classList.add("notifikasi", "baik");
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedIn");
+      localStorage.removeItem("usernameAktif");
+      window.location.href = "login.html";
+    }
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('✅ Service worker registered'))
+        .catch(err => console.error('❌ Gagal daftar service worker:', err));
+    }
+  </script>
+
+</body>
+</html>
